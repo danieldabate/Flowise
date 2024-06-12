@@ -43,35 +43,35 @@ const StyledTableRow = styled(TableRow)(() => ({
     }
 }))
 
-const getLocalStorageKeyName = (name, isAgentCanvas) => {
-    return (isAgentCanvas ? 'agentcanvas' : 'chatflowcanvas') + '_' + name
-}
-
-export const FlowListTable = ({ data, images, isLoading, filterFunction, updateFlowsApi, setError, isAgentCanvas }) => {
+export const FlowListTable = ({ data, images, isLoading, filterFunction, updateFlowsApi, setError, localStorageKey, isAgentCanvas }) => {
     const theme = useTheme()
     const customization = useSelector((state) => state.customization)
 
-    const localStorageKeyOrder = getLocalStorageKeyName('order', isAgentCanvas)
-    const localStorageKeyOrderBy = getLocalStorageKeyName('orderBy', isAgentCanvas)
+    localStorageKey = localStorageKey || 'flowListTableState'
 
-    const [order, setOrder] = useState(localStorage.getItem(localStorageKeyOrder) || 'desc')
-    const [orderBy, setOrderBy] = useState(localStorage.getItem(localStorageKeyOrderBy) || 'updatedDate')
+    const getTableStateFromLocalStorage = () => {
+        const storedState = localStorage.getItem(localStorageKey)
+        return storedState ? JSON.parse(storedState) : { order: 'desc', orderBy: 'updatedDate' }
+    }
 
-    const handleRequestSort = (property) => {
-        const isAsc = orderBy === property && order === 'asc'
+    const [tableState, setTableState] = useState(getTableStateFromLocalStorage)
+
+    const handleSort = (property) => {
+        const isAsc = tableState.orderBy === property && tableState.order === 'asc'
         const newOrder = isAsc ? 'desc' : 'asc'
-        setOrder(newOrder)
-        setOrderBy(property)
-        localStorage.setItem(localStorageKeyOrder, newOrder)
-        localStorage.setItem(localStorageKeyOrderBy, property)
+        const newOrderState = { order: newOrder, orderBy: property }
+        setTableState(newOrderState)
+        localStorage.setItem(localStorageKey, JSON.stringify(newOrderState))
     }
 
     const sortedData = data
         ? [...data].sort((a, b) => {
-              if (orderBy === 'name') {
-                  return order === 'asc' ? (a.name || '').localeCompare(b.name || '') : (b.name || '').localeCompare(a.name || '')
-              } else if (orderBy === 'updatedDate') {
-                  return order === 'asc'
+              if (tableState.orderBy === 'name') {
+                  return tableState.order === 'asc'
+                      ? (a.name || '').localeCompare(b.name || '')
+                      : (b.name || '').localeCompare(a.name || '')
+              } else if (tableState.orderBy === 'updatedDate') {
+                  return tableState.order === 'asc'
                       ? new Date(a.updatedDate) - new Date(b.updatedDate)
                       : new Date(b.updatedDate) - new Date(a.updatedDate)
               }
@@ -91,7 +91,7 @@ export const FlowListTable = ({ data, images, isLoading, filterFunction, updateF
                     >
                         <TableRow>
                             <StyledTableCell component='th' scope='row' style={{ width: '20%' }} key='0'>
-                                <TableSortLabel active={orderBy === 'name'} direction={order} onClick={() => handleRequestSort('name')}>
+                                <TableSortLabel active={tableState.orderBy === 'name'} direction={tableState.order} onClick={() => handleSort('name')}>
                                     Name
                                 </TableSortLabel>
                             </StyledTableCell>
@@ -103,9 +103,9 @@ export const FlowListTable = ({ data, images, isLoading, filterFunction, updateF
                             </StyledTableCell>
                             <StyledTableCell style={{ width: '15%' }} key='3'>
                                 <TableSortLabel
-                                    active={orderBy === 'updatedDate'}
-                                    direction={order}
-                                    onClick={() => handleRequestSort('updatedDate')}
+                                    active={tableState.orderBy === 'updatedDate'}
+                                    direction={tableState.order}
+                                    onClick={() => handleSort('updatedDate')}
                                 >
                                     Last Modified Date
                                 </TableSortLabel>
@@ -282,5 +282,6 @@ FlowListTable.propTypes = {
     filterFunction: PropTypes.func,
     updateFlowsApi: PropTypes.object,
     setError: PropTypes.func,
+    localStorageKey: PropTypes.string,
     isAgentCanvas: PropTypes.bool
 }

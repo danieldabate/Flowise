@@ -192,6 +192,7 @@ const Agentflows = () => {
                             filterFunction={filterFlows}
                             updateFlowsApi={getAllAgentflows}
                             setError={setError}
+                            localStorageKey={'agentflowListTableState'}
                         />
                     )}
                     {!isLoading && (!getAllAgentflows.data || getAllAgentflows.data.length === 0) && (

@@ -191,6 +191,7 @@ const Chatflows = () => {
                             filterFunction={filterFlows}
                             updateFlowsApi={getAllChatflowsApi}
                             setError={setError}
+                            localStorageKey={'chatflowListTableState'}
                         />
                     )}
                     {!isLoading && (!getAllChatflowsApi.data || getAllChatflowsApi.data.length === 0) && (
